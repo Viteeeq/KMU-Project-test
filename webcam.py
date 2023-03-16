@@ -30,4 +30,4 @@ while rval:
     #     break
 
 vc.release()
-cv2.destroyWindow("preview")
+cv2.destroyWindow("webcam")
