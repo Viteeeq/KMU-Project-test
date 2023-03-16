@@ -1,5 +1,4 @@
 import sqlite3
-import json
 
 class PostamatDatabase:
     def __init__(self, db_file):
@@ -48,7 +47,6 @@ class PostamatDatabase:
                            (str(items), user_id))
 
     def check_items(self, user_id, item_id):
-        """ Напиши метод, который возвращает True, если по данному ключу в столбце items есть значение, иначе False """
         with sqlite3.connect(self.db_file) as conn:
             cursor = conn.cursor()
             cursor.execute('''SELECT * FROM postamat WHERE user_id = ?''', (user_id,))
@@ -60,7 +58,14 @@ class PostamatDatabase:
 
 
     def get_items(self, user_id):
-        """ Напиши метод, который возвращает все значения из столбца items """
+        with sqlite3.connect(self.db_file) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''SELECT * FROM postamat WHERE user_id = ?''', (user_id,))
+            row = cursor.fetchone() 
+            if row:
+                _, _, _, items = row
+                return eval(items)
+            return "Данного предмета нет в базе данных"
 
 
 if __name__ == "__main__":
