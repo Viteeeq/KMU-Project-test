@@ -17,8 +17,6 @@ else:
 
 while rval:
     frame_index += 1
-    fps = vc.get(cv2.CAP_PROP_POS_FRAMES)
-    print(fps)
     print(frame_index)
     cv2.imshow("webcam", frame)
     rval, frame = vc.read()
