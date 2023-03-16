@@ -1,4 +1,5 @@
 import sqlite3
+import json
 
 class PostamatDatabase:
     def __init__(self, db_file):
@@ -29,14 +30,14 @@ class PostamatDatabase:
             cursor = conn.cursor()
             cursor.execute('''DELETE FROM postamat WHERE user_id = ?''', (user_id,))
 
-    def get_user(self, postamat_id):
+    def get_user(self, id):
         with sqlite3.connect(self.db_file) as conn:
             cursor = conn.cursor()
-            cursor.execute('''SELECT * FROM postamat WHERE id = ?''', (postamat_id,))
+            cursor.execute('''SELECT * FROM postamat WHERE id = ?''', (id,))
             row = cursor.fetchone()
             if row:
-                postamat_id, user_id, biometrics, items = row
-                return {'id': postamat_id, 'user_id': user_id, 'biometrics': biometrics,
+                id, user_id, biometrics, items = row
+                return {'id': id, 'user_id': user_id, 'biometrics': eval(biometrics),
                         'items': eval(items)}
             return "Данного пользователя нет в базе данных"
 
@@ -46,8 +47,26 @@ class PostamatDatabase:
             cursor.execute('''UPDATE postamat SET items = ? WHERE user_id = ?''',
                            (str(items), user_id))
 
+    def check_items(self, user_id, item_id):
+        """ Напиши метод, который возвращает True, если по данному ключу в столбце items есть значение, иначе False """
+        with sqlite3.connect(self.db_file) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''SELECT * FROM postamat WHERE user_id = ?''', (user_id,))
+            row = cursor.fetchone() 
+            if row:
+                _, _, _, items = row
+                return eval(items)[item_id]
+            return "Данного предмета нет в базе данных"
+
+
+    def get_items(self, user_id):
+        """ Напиши метод, который возвращает все значения из столбца items """
+
+
 if __name__ == "__main__":
     db = PostamatDatabase('postamat.db')
     db.create_table()
+
+
 
 
