@@ -56,7 +56,6 @@ class PostamatDatabase:
                 return eval(items)[item_id]
             return "Данного предмета нет в базе данных"
 
-
     def get_items(self, user_id):
         with sqlite3.connect(self.db_file) as conn:
             cursor = conn.cursor()

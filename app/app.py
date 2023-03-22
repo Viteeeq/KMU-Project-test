@@ -7,11 +7,12 @@ from PIL import Image
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QPushButton
-
+from data_base.database import PostamatDatabase
 
 class VideoPlayer(QDialog):
     def __init__(self):
         super().__init__()
+        db = PostamatDatabase('postamat.db')
 
         # Создаем QLabel для отображения видео
         self.label = QLabel(self)
@@ -56,7 +57,8 @@ class VideoPlayer(QDialog):
         # Сохраняем кадр в файл
         if ret:
             cv2.imwrite('snapshot.jpg', frame)
-        self.extract_face("snapshot.jpg", "randomname")
+        self.name = "randomname"
+        self.extract_face("snapshot.jpg", self.name)
         
             
     def extract_face(self, photo_path, username):
@@ -72,7 +74,8 @@ class VideoPlayer(QDialog):
         known_photo = face_recognition.load_image_file(f"{username}.jpg") #
         try:
             known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
-            print(json.dumps(known_encodings))
+            db.add_user(self.name, known_encodings, {})
+            # return json.dumps()
         except IndexError:
             print("Сфоткайся ещё раз, чзх.")
         #   known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
