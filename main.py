@@ -18,9 +18,10 @@ def extracting_faces(img_path, username):
 
         face_img = faces[top:bottom, left:right]
         pil_img = Image.fromarray(face_img)
-        pil_img.save(f"ideal_images/{username}.jpg")
-    known_photo = face_recognition.load_image_file(f"ideal_images/{username}.jpg")
+        pil_img.save(f"{username}.jpg")
+    known_photo = face_recognition.load_image_file(f"{username}.jpg")
     known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
+    print(known_encodings)
     return json.dumps(known_encodings)
 
 def frame_count(temp):
@@ -101,7 +102,8 @@ def discr_compare(known_enc, destination):
 def cleaning(frame):
     os.remove(f'scr{frame}.jpg')
 
-start_time = time.time()
-a, b = frame_count("temp_video")
-save_src("temp_video", a, b)
-print("--- %s seconds ---" % (time.time() - start_time))
+# start_time = time.time()
+# a, b = frame_count("temp_video")
+# save_src("temp_video", a, b)
+# print("--- %s seconds ---" % (time.time() - start_time))
+extracting_faces("snapshot.jpg", "Viteq")
