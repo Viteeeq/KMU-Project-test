@@ -7,12 +7,13 @@ from PIL import Image
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QPushButton
-from data_base.database import PostamatDatabase
+from database import PostamatDatabase
 
 class VideoPlayer(QDialog):
     def __init__(self):
         super().__init__()
-        db = PostamatDatabase('postamat.db')
+        self.db = PostamatDatabase('postamat.db')
+        self.db.create_table()
 
         # Создаем QLabel для отображения видео
         self.label = QLabel(self)
@@ -74,13 +75,12 @@ class VideoPlayer(QDialog):
         known_photo = face_recognition.load_image_file(f"{username}.jpg") #
         try:
             known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
-            db.add_user(self.name, known_encodings, {})
+            self.db.add_user(self.name, known_encodings, {})
+            print(self.db.get_user(1))
             # return json.dumps()
         except IndexError:
             print("Сфоткайся ещё раз, чзх.")
         #   known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
-        
-        # print(known_encodings)
             
     def discr_compare(self, known_enc, destination):
         image_to_compare = face_recognition.load_image_file(destination)  # загружаем фото которое надо сравнить

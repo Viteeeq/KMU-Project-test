@@ -1,4 +1,4 @@
-from data_base.database import PostamatDatabase
+from app.database import PostamatDatabase
 import json
 
 def check_bd():
