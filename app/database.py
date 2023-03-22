@@ -1,4 +1,5 @@
 import sqlite3
+import json
 
 class PostamatDatabase:
     def __init__(self, db_file):
@@ -39,6 +40,16 @@ class PostamatDatabase:
                 return {'id': id, 'user_id': user_id, 'biometrics': eval(biometrics),
                         'items': eval(items)}
             return "Данного пользователя нет в базе данных"
+        
+    def get_biometrics(self, id):
+        with sqlite3.connect(self.db_file) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''SELECT * FROM postamat WHERE id = ?''', (id,))
+            row = cursor.fetchone()
+            if row:
+                _, _, biometrics, _ = row
+                return eval(biometrics)
+            return "Данного пользователя нет в базе данных"
 
     def change_items(self, user_id, items):
         with sqlite3.connect(self.db_file) as conn:
@@ -65,6 +76,24 @@ class PostamatDatabase:
                 _, _, _, items = row
                 return eval(items)
             return "Данного предмета нет в базе данных"
+    
+    def get_length(self):
+        with sqlite3.connect(self.db_file) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''SELECT * FROM postamat''')
+            row = cursor.fetchall()
+            return len(row)
+        
+    def get_rekt(self):
+        with sqlite3.connect(self.db_file) as conn:
+            cursor = conn.cursor()
+            for row in cursor.execute('''SELECT * FROM postamat'''):
+                print(row[2])
+                temp = json.loads(row[2])
+                return temp
+                
+        
+    
 
 
 if __name__ == "__main__":

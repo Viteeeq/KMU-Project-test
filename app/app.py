@@ -60,6 +60,14 @@ class VideoPlayer(QDialog):
             cv2.imwrite('snapshot.jpg', frame)
         self.name = "randomname"
         self.extract_face("snapshot.jpg", self.name)
+        known_enc = self.db.get_rekt()
+        print(known_enc)
+        print(self.discr_compare([known_enc], "randomname.jpg"))
+        # len_db = self.db.get_length()
+        # for i in range(1, len_db+1):
+        #     print(self.discr_compare(json.loads(self.db.get_biometrics(i)), "randomname.jpg"), i)
+        #     # print(self.db.get_biometrics(i), "randomname.jpg", i)
+        
         
             
     def extract_face(self, photo_path, username):
@@ -75,9 +83,11 @@ class VideoPlayer(QDialog):
         known_photo = face_recognition.load_image_file(f"{username}.jpg") #
         try:
             known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
-            self.db.add_user(self.name, known_encodings, {})
-            print(self.db.get_user(1))
-            # return json.dumps()
+            smth = json.dumps(known_encodings)
+            # print(face_recognition.face_encodings(known_photo)[0])
+            # self.db.add_user(self.name, smth, {1:'bebra'})
+            # print(self.db.get_user(1))
+            # print(self.db.get_length())
         except IndexError:
             print("Сфоткайся ещё раз, чзх.")
         #   known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
@@ -85,7 +95,8 @@ class VideoPlayer(QDialog):
     def discr_compare(self, known_enc, destination):
         image_to_compare = face_recognition.load_image_file(destination)  # загружаем фото которое надо сравнить
         image_to_compare_encoding = face_recognition.face_encodings(image_to_compare)[0]  # вычисляем дескриптор
-        result = face_recognition.compare_faces([known_enc], image_to_compare_encoding, tolerance=0.5)  # получаем результат сравнения
+        result = face_recognition.compare_faces(known_enc, image_to_compare_encoding, tolerance=0.5)  # получаем результат сравнения
+        print(result)
         return result
         
 
