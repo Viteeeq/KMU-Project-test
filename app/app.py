@@ -54,12 +54,12 @@ class VideoPlayer(QDialog):
     def take_snapshot(self):
         # Считываем текущий кадр из видеопотока
         ret, frame = self.capture.read()
+        self.name = "randomname"
 
         # Сохраняем кадр в файл
         if ret:
-            cv2.imwrite('snapshot.jpg', frame)
-        self.name = "randomname"
-        self.extract_face("snapshot.jpg", self.name)
+            cv2.imwrite(f'{self.name}.jpg', frame)
+        self.extract_face(f'{self.name}.jpg', self.name)
         known_enc = self.db.get_rekt()
         print(known_enc)
         print(self.discr_compare([known_enc], "randomname.jpg"))
@@ -71,15 +71,15 @@ class VideoPlayer(QDialog):
         
             
     def extract_face(self, photo_path, username):
-        faces = face_recognition.load_image_file(photo_path) #
-        faces_locations = face_recognition.face_locations(faces)
+        # faces = face_recognition.load_image_file(photo_path) #
+        # faces_locations = face_recognition.face_locations(faces)
 
-        for face_location in faces_locations:
-            top, right, bottom, left = face_location
+        # for face_location in faces_locations:
+        #     top, right, bottom, left = face_location
 
-            face_img = faces[top:bottom, left:right]
-            pil_img = Image.fromarray(face_img)
-            pil_img.save(f"{username}.jpg") #
+        #     face_img = faces[top:bottom, left:right]
+        #     pil_img = Image.fromarray(face_img)
+        #     pil_img.save(f"{username}.jpg")
         known_photo = face_recognition.load_image_file(f"{username}.jpg") #
         try:
             known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
@@ -93,11 +93,14 @@ class VideoPlayer(QDialog):
         #   known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
             
     def discr_compare(self, known_enc, destination):
-        image_to_compare = face_recognition.load_image_file(destination)  # загружаем фото которое надо сравнить
-        image_to_compare_encoding = face_recognition.face_encodings(image_to_compare)[0]  # вычисляем дескриптор
-        result = face_recognition.compare_faces(known_enc, image_to_compare_encoding, tolerance=0.5)  # получаем результат сравнения
-        print(result)
-        return result
+        try:
+            image_to_compare = face_recognition.load_image_file(destination)  # загружаем фото которое надо сравнить
+            image_to_compare_encoding = face_recognition.face_encodings(image_to_compare)[0]  # вычисляем дескриптор
+            result = face_recognition.compare_faces(known_enc, image_to_compare_encoding, tolerance=0.5)  # получаем результат сравнения
+            print(result)
+            return result
+        except IndexError:
+            print("Сфоткайся ещё раз, чзх.")
         
 
 
