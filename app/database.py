@@ -90,8 +90,8 @@ class PostamatDatabase:
             cursor.execute('''SELECT * FROM postamat WHERE id = ?''', (id,))
             row = cursor.fetchone() 
             temp = json.loads(row[2])
-            # index = row[0]
-            return temp
+            username = row[1]
+            return temp, username
                 
         
     

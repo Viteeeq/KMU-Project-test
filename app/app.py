@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import face_recognition
 import json
-from PIL import Image
+import time
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QPushButton
@@ -53,6 +53,7 @@ class VideoPlayer(QDialog):
 
     def take_snapshot(self):
         # Считываем текущий кадр из видеопотока
+        start_time = time.time()
         ret, frame = self.capture.read()
         self.name = "randomname"
 
@@ -60,17 +61,13 @@ class VideoPlayer(QDialog):
         if ret:
             cv2.imwrite(f'{self.name}.jpg', frame)
         self.extract_face(f'{self.name}.jpg', self.name)
-        # print(known_enc)
         len_db = self.db.get_length()
         for i in range(1, len_db + 1):
-            known_enc = self.db.get_rekt(i)
-            print(self.discr_compare([known_enc], "randomname.jpg"), ' ', i)
-    
-        # for i in range(1, len_db+1):
-        #     print(self.discr_compare(json.loads(self.db.get_biometrics(i)), "randomname.jpg"), i)
-        #     # print(self.db.get_biometrics(i), "randomname.jpg", i)
-        
-        
+            known_enc, name = self.db.get_rekt(i)
+            compare_res = self.discr_compare([known_enc], "randomname.jpg")[0]
+            if compare_res:
+                spend_time = time.time() - start_time
+                print(f'Это же {name}! Программа определила, что это вы за {spend_time}!')       
             
     def extract_face(self, photo_path, username):
         known_photo = face_recognition.load_image_file(f"{username}.jpg") #
@@ -78,12 +75,9 @@ class VideoPlayer(QDialog):
             known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
             smth = json.dumps(known_encodings)
             # print(face_recognition.face_encodings(known_photo)[0])
-            # self.db.add_user(self.name, smth, {1:'bebra'})
-            # print(self.db.get_user(1))
-            # print(self.db.get_length())
+            # self.db.add_user(input(), smth, {1:'bebra'})
         except IndexError:
             print("Сфоткайся ещё раз, чзх.")
-        #   known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
             
     def discr_compare(self, known_enc, destination):
         try:
