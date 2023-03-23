@@ -84,13 +84,14 @@ class PostamatDatabase:
             row = cursor.fetchall()
             return len(row)
         
-    def get_rekt(self):
+    def get_rekt(self, id):
         with sqlite3.connect(self.db_file) as conn:
             cursor = conn.cursor()
-            for row in cursor.execute('''SELECT * FROM postamat'''):
-                print(row[2])
-                temp = json.loads(row[2])
-                return temp
+            cursor.execute('''SELECT * FROM postamat WHERE id = ?''', (id,))
+            row = cursor.fetchone() 
+            temp = json.loads(row[2])
+            # index = row[0]
+            return temp
                 
         
     
