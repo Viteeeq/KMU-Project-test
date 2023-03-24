@@ -8,12 +8,15 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QPushButton
 from database import PostamatDatabase
+import pr
 
 class VideoPlayer(QDialog):
     def __init__(self):
         super().__init__()
         self.db = PostamatDatabase('postamat.db')
         self.db.create_table()
+        self.name = "randomname"
+        self.ImPr = pr.ImageProcessing()
 
         # Создаем QLabel для отображения видео
         self.label = QLabel(self)
@@ -53,23 +56,26 @@ class VideoPlayer(QDialog):
 
     def take_snapshot(self):
         # Считываем текущий кадр из видеопотока
-        start_time = time.time()
+        start_ti = time.time()
         ret, frame = self.capture.read()
-        self.name = "randomname"
 
         # Сохраняем кадр в файл
         if ret:
             cv2.imwrite(f'{self.name}.jpg', frame)
-        self.extract_face(f'{self.name}.jpg', self.name)
-        len_db = self.db.get_length()
-        for i in range(1, len_db + 1):
-            known_enc, name = self.db.get_rekt(i)
-            compare_res = self.discr_compare([known_enc], "randomname.jpg")[0]
-            if compare_res:
-                spend_time = time.time() - start_time
-                print(f'Это же {name}! Программа определила, что это вы за {spend_time}!')       
+        
+        
+        self.ImPr.full_cycle(start_ti)
+        # self.extract_face(self.name)
+        # len_db = self.db.get_length()
+        # for i in range(1, len_db + 1):
+        #     known_enc, name = self.db.get_comparing_biometrics(i)
+        #     compare_res = self.discr_compare([known_enc], f"{self.name}.jpg")[0]
+        #     if compare_res:
+        #         spend_time = time.time() - start_time
+        #         print(f'Это же {name}! Программа определила, что это вы за {spend_time}!')
+        #         break
             
-    def extract_face(self, photo_path, username):
+    def extract_face(self, username):
         known_photo = face_recognition.load_image_file(f"{username}.jpg") #
         try:
             known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
