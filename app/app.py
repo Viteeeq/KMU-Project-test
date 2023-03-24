@@ -8,7 +8,7 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QPushButton
 from database import PostamatDatabase
-import pr
+import image
 
 class VideoPlayer(QDialog):
     def __init__(self):
@@ -16,7 +16,7 @@ class VideoPlayer(QDialog):
         self.db = PostamatDatabase('postamat.db')
         self.db.create_table()
         self.name = "randomname"
-        self.ImPr = pr.ImageProcessing()
+        self.ImPr = image.ImageProcessing()
 
         # Создаем QLabel для отображения видео
         self.label = QLabel(self)
@@ -34,7 +34,7 @@ class VideoPlayer(QDialog):
         # Создаем кнопку для снимка
         self.snap_btn = QPushButton("Верификация", self)
         self.snap_btn.setGeometry(800, 100, 120, 50)
-        self.snap_btn.clicked.connect(self.take_snapshot)
+        self.snap_btn.clicked.connect(self.verification)
         # Запускаем таймер
         self.timer.start()
 
@@ -56,46 +56,19 @@ class VideoPlayer(QDialog):
 
     def take_snapshot(self):
         # Считываем текущий кадр из видеопотока
-        start_ti = time.time()
+        start_time = time.time()
         ret, frame = self.capture.read()
 
         # Сохраняем кадр в файл
         if ret:
             cv2.imwrite(f'{self.name}.jpg', frame)
+            return start_time
         
-        
-        self.ImPr.full_cycle(start_ti)
-        # self.extract_face(self.name)
-        # len_db = self.db.get_length()
-        # for i in range(1, len_db + 1):
-        #     known_enc, name = self.db.get_comparing_biometrics(i)
-        #     compare_res = self.discr_compare([known_enc], f"{self.name}.jpg")[0]
-        #     if compare_res:
-        #         spend_time = time.time() - start_time
-        #         print(f'Это же {name}! Программа определила, что это вы за {spend_time}!')
-        #         break
+    def verification(self):
+        self.ImPr.faces_comparing(self.take_snapshot())
+   
             
-    def extract_face(self, username):
-        known_photo = face_recognition.load_image_file(f"{username}.jpg") #
-        try:
-            known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
-            smth = json.dumps(known_encodings)
-            # print(face_recognition.face_encodings(known_photo)[0])
-            # self.db.add_user(input(), smth, {1:'bebra'})
-        except IndexError:
-            print("Сфоткайся ещё раз, чзх.")
             
-    def discr_compare(self, known_enc, destination):
-        try:
-            image_to_compare = face_recognition.load_image_file(destination)  # загружаем фото которое надо сравнить
-            image_to_compare_encoding = face_recognition.face_encodings(image_to_compare)[0]  # вычисляем дескриптор
-            result = face_recognition.compare_faces(known_enc, image_to_compare_encoding, tolerance=0.5)  # получаем результат сравнения
-            # print(result)
-            return result
-        except IndexError:
-            print("Сфоткайся ещё раз, чзх.")
-        
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
