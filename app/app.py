@@ -1,7 +1,5 @@
 import sys
 import cv2
-import numpy as np
-import face_recognition
 import json
 import time
 from PyQt5.QtCore import QTimer
