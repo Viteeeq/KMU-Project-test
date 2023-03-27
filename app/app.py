@@ -3,7 +3,7 @@ import cv2
 import time
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QPushButton
+from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QPushButton  
 from database import PostamatDatabase
 import image
 import item_list as il
@@ -63,9 +63,9 @@ class VideoPlayer(QDialog):
             return start_time
         
     def verification(self):
-        user_name, user_item = self.ImPr.faces_comparing(self.take_snapshot())
-        print(user_item.split(','))
-        print(type(user_item.split(',')))
+        self.ImPr.faces_comparing(self.take_snapshot())
+        # print(user_item.split(','))
+        # print(type(user_item.split(',')))
         # self.stacked_widget.setCurrentWidget(player)
         # usIt = user_item.split(',')
         # app2 = QApplication(sys.argv)
