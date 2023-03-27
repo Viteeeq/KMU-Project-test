@@ -3,7 +3,7 @@ import cv2
 import time
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QPushButton  
+from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QPushButton
 from database import PostamatDatabase
 import image
 import item_list as il
@@ -19,6 +19,7 @@ class VideoPlayer(QDialog):
         # Создаем QLabel для отображения видео
         self.label = QLabel(self)
         self.label.setGeometry(100, 100, 680, 480)
+        
 
         # Создаем таймер для получения новых кадров видео
         self.timer = QTimer(self)
@@ -72,7 +73,11 @@ class VideoPlayer(QDialog):
         # ex = il.Example(usIt)
         # ex.show()
         # sys.exit(app2.exec_())
-
+        # self.label.close()
+        # self.snap_btn.close()
+        self.close()
+        # здесь вызывать класс
+        
         
 
 

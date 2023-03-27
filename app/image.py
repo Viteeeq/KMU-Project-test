@@ -21,7 +21,6 @@ class ImageProcessing:
                 if compare_res:
                     spend_time = time.time() - start_time
                     print(f'Это же {name}! Программа определила, что это вы за {spend_time}!')
-                    return name, items
                     break
             except TypeError:
                 print('Пожалуйста, сделайте новое фото!')
