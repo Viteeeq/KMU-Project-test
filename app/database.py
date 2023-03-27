@@ -88,10 +88,11 @@ class PostamatDatabase:
         with sqlite3.connect(self.db_file) as conn:
             cursor = conn.cursor()
             cursor.execute('''SELECT * FROM postamat WHERE id = ?''', (id,))
-            row = cursor.fetchone() 
+            row = cursor.fetchone()
+            items = row[3]
             temp = json.loads(row[2])
             username = row[1]
-            return temp, username
+            return temp, username, items
 
 
 if __name__ == "__main__":
