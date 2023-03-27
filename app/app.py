@@ -3,7 +3,7 @@ import cv2
 import time
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QPushButton, QStackedWidget
+from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QPushButton
 from database import PostamatDatabase
 import image
 import item_list as il
