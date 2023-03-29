@@ -24,6 +24,6 @@ class Example(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = Example([])
+    ex = Example(['1', '2'])
     ex.show()
     sys.exit(app.exec_())

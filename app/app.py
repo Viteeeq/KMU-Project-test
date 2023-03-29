@@ -64,18 +64,18 @@ class VideoPlayer(QDialog):
             return start_time
         
     def verification(self):
+        # x, y = 
         self.ImPr.faces_comparing(self.take_snapshot())
-        # print(user_item.split(','))
-        # print(type(user_item.split(',')))
-        # self.stacked_widget.setCurrentWidget(player)
-        # usIt = user_item.split(',')
+        # print(y.split(','))
+        # print(type(y.split(',')))
+        # # self.stacked_widget.setCurrentWidget(player)
+        # usIt = y.split(',')
         # app2 = QApplication(sys.argv)
-        # ex = il.Example(usIt)
-        # ex.show()
+        
+        # 
         # sys.exit(app2.exec_())
         # self.label.close()
         # self.snap_btn.close()
-        self.close()
         # здесь вызывать класс
         
         
