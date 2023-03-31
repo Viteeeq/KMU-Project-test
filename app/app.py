@@ -6,7 +6,6 @@ from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QPushButton
 from database import PostamatDatabase
 import image
-import item_list as il
 
 class VideoPlayer(QDialog):
     def __init__(self):

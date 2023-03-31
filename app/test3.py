@@ -4,64 +4,116 @@ import cv2
 import time
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QPushButton, QGridLayout, QWidget, QMainWindow, QListWidget, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QPushButton, QGridLayout, QWidget, QMainWindow, QListWidget
 from database import PostamatDatabase
 import image
 
-
-class Game(QWidget):
-    def __init__(self, s, r, f, d, items, parent):
-        super(Game, self).__init__()
-
-        print(s, r, f, d, items, parent)
+class ReturnWindow(QWidget):
+    def __init__(self, items, name, db, parent):
+        super(ReturnWindow, self).__init__()
+        
+        self.db = db
+        self.user = name
         self.parent = parent
-
-        # self.label = QLabel()
-        # self.label.setPixmap(QPixmap(img))
-
-        self.button = QPushButton('End', clicked=self.go_end)
-        self.grid_layout = QGridLayout(self)
         self.items = items
+        self.std_choose = "(Выбрано)"
+
+        self.get_button = QPushButton('Забрать', clicked=self.go_end)
+        self.take_button = QPushButton('Выбрать всё', clicked=self.select_all)
+        # self.return_button = QPushButton('Вернуть', clicked=self.)
+        self.grid_layout = QGridLayout(self)
+        self.l = QListWidget()
         self.check_items = {}
         for i in range(len(self.items)):
+            x = self.items[i]
             self.check_items[i] = self.items[i]
-        self.lists = (self.items)
+            # if not(self.std_choose in x):
+            #     self.l.addItem(x)
+        self.l.addItems(self.items)
+        # self.l.addItem(self.items[i])
+        self.grid_layout.addWidget(self.l)
+        self.grid_layout.addWidget(self.get_button)
+        self.grid_layout.addWidget(self.take_button)
+        # self.grid_layout.addWidget(self.return_button)
+
+        self.l.itemClicked.connect(self.select_one)
+        
+
+
+
+class SelectionWindow(QWidget):
+    def __init__(self, items, name, db, parent):
+        super(SelectionWindow, self).__init__()
+        
+        self.db = db
+        self.user = name
+        self.parent = parent
+        self.items = items
+        self.std_choose = "(Выбрано)"
+
+        self.get_button = QPushButton('Забрать', clicked=self.go_end)
+        self.take_button = QPushButton('Выбрать всё', clicked=self.select_all)
+        # self.return_button = QPushButton('Вернуть', clicked=self.)
+        self.grid_layout = QGridLayout(self)
         self.l = QListWidget()
-        self.l.addItems(self.lists)
-        self.l.setGeometry(100, 100, 680, 480)
+        self.check_items = {}
+        for i in range(len(self.items)):
+            x = self.items[i]
+            self.check_items[i] = self.items[i]
+            # if not(self.std_choose in x):
+            #     self.l.addItem(x)
+        self.l.addItems(self.items)
+        # self.l.addItem(self.items[i])
         self.grid_layout.addWidget(self.l)
-        self.grid_layout.addWidget(self.button)
+        self.grid_layout.addWidget(self.get_button)
+        self.grid_layout.addWidget(self.take_button)
+        # self.grid_layout.addWidget(self.return_button)
 
-        self.l.itemClicked.connect(self.selectionChanged)
+        self.l.itemClicked.connect(self.select_one)
 
-        self.grid_layout.addWidget(self.l)
-
-    def selectionChanged(self, item):
+    def select_one(self, item):
         print("Вы кликнули: {}".format(item.text()))
         itm_txt = item.text()
-        print("Делайте что-нибудь.", itm_txt)
-        print(self.check_items)
-        print(item)
         res = None
         for k, v in self.check_items.items():
             if v == itm_txt:
                 res = int(k)
         self.hide()
         self.l.clear()
-        self.std_choose = "(Выбрано)"
-        if self.std_choose in self.lists[res]:
-            self.lists[res] = self.lists[res].replace(self.std_choose, '')
+        if self.std_choose in self.items[res]:
+            self.items[res] = self.items[res].replace(self.std_choose, '')
         else:
-            self.lists[res] += self.std_choose
-        for i in range(len(self.lists)):
-            self.check_items[i] = self.lists[i]
-        self.l.addItems(self.lists)
-        self.check_items
+            self.items[res] = self.std_choose + self.items[res]
+        for i in range(len(self.items)):
+            self.check_items[i] = self.items[i]
+        self.l.addItems(self.items)
+        print(self.check_items)
         self.show()
         
     def go_end(self):
-        self.parent.show()        
+        str1 = ''
+        for k, v in self.check_items.items():
+            str1 += v + ','
+            print(k, ' ',v)
+        str1 = str1[:-1]
+        print(str1)
+        self.db.change_items(self.user, str1)
+        self.parent.show()
         self.hide()
+        
+        
+    def select_all(self):
+        self.hide()
+        self.l.clear()
+        for i in range(len(self.items)):
+            if not(self.std_choose in self.items[i]):
+                self.items[i] = self.std_choose + self.items[i]
+        for i in range(len(self.items)):
+            self.check_items[i] = self.items[i]
+        self.l.addItems(self.items)
+        self.show()
+        
+        
         
 
 class MainWindow(QMainWindow):
@@ -71,7 +123,7 @@ class MainWindow(QMainWindow):
         centralWidget = QWidget()
         self.setCentralWidget(centralWidget)
 
-        self.button = QPushButton('Start', clicked=self.go_start)
+        self.button = QPushButton('Верификация', clicked=self.go_to_selection)
 
         self.grid_layout = QGridLayout(centralWidget)
         ###
@@ -101,7 +153,7 @@ class MainWindow(QMainWindow):
         self.snap_btn.clicked.connect(self.verification)
         # Запускаем таймер
         self.timer.start()
-        
+
     def update_frame(self):
         # Считываем кадр из видеопотока
         ret, frame = self.capture.read()
@@ -118,8 +170,8 @@ class MainWindow(QMainWindow):
             pixmap = QPixmap.fromImage(qt_image)
             self.label.setPixmap(pixmap)
 
-    def go_start(self, items):
-        self.g = Game('s','r','f','d', items, self)
+    def go_to_selection(self, items, username):
+        self.g = SelectionWindow(items, username, self.db, self)
         self.g.show()        
         self.hide()
         
@@ -139,7 +191,7 @@ class MainWindow(QMainWindow):
             print(user_items.split(','))
             print(type(user_items.split(',')))
             user_items_ready = user_items.split(',')
-            self.go_start(user_items_ready)
+            self.go_to_selection(user_items_ready, user_name)
         except:
             pass
 

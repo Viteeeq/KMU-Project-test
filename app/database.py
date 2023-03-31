@@ -98,7 +98,3 @@ class PostamatDatabase:
 if __name__ == "__main__":
     db = PostamatDatabase('postamat.db')
     db.create_table()
-
-
-
-
