@@ -15,30 +15,58 @@ class ReturnWindow(QWidget):
         self.db = db
         self.user = name
         self.parent = parent
-        self.items = items
+        self.items = self.db.get_items(self.user).split(',')
         self.std_choose = "(Выбрано)"
+        self.std2 = '+++'
 
-        self.get_button = QPushButton('Забрать', clicked=self.go_end)
-        self.take_button = QPushButton('Выбрать всё', clicked=self.select_all)
-        # self.return_button = QPushButton('Вернуть', clicked=self.)
-        self.grid_layout = QGridLayout(self)
-        self.l = QListWidget()
-        self.check_items = {}
+        self.return_button = QPushButton('Вернуть', clicked = self.return_items)
+        self.exit_button = QPushButton('Выход', clicked=self.go_end)
+        self.grid_layout2 = QGridLayout(self)
+        self.rlist = QListWidget()
+        self.check_items2 = {}
         for i in range(len(self.items)):
             x = self.items[i]
-            self.check_items[i] = self.items[i]
-            # if not(self.std_choose in x):
-            #     self.l.addItem(x)
-        self.l.addItems(self.items)
+            self.check_items2[i] = self.items[i]
+            if (self.std_choose in x):
+                self.rlist.addItem(x)
+        # self.rlist.addItems(self.items)
         # self.l.addItem(self.items[i])
-        self.grid_layout.addWidget(self.l)
-        self.grid_layout.addWidget(self.get_button)
-        self.grid_layout.addWidget(self.take_button)
-        # self.grid_layout.addWidget(self.return_button)
+        self.grid_layout2.addWidget(self.rlist)
+        self.grid_layout2.addWidget(self.return_button)
+        self.grid_layout2.addWidget(self.exit_button)
 
-        self.l.itemClicked.connect(self.select_one)
+        self.rlist.itemClicked.connect(self.select_one)
         
-
+    def select_one(self, item):
+        print("Вы кликнули: {}".format(item.text()))
+        itm_txt = item.text()
+        res = None
+        for k, v in self.check_items2.items():
+            if v == itm_txt:
+                res = int(k)
+        self.hide()
+        self.rlist.clear()
+        if self.std2 in self.items[res]:
+            self.items[res] = self.items[res].replace(self.std2, '')
+        else:
+            self.items[res] = self.std2 + self.items[res]
+        for i in range(len(self.items)):
+            self.check_items2[i] = self.items[i]
+        # self.rlist.addItems(self.items)
+        for i in range(len(self.items)):
+            x = self.items[i]
+            self.check_items2[i] = self.items[i]
+            if (self.std_choose in x):
+                self.rlist.addItem(x)
+        print(self.check_items2)
+        self.show()
+        
+    def return_items(self):
+        print(self.items)
+    
+    def go_end(self):
+        self.parent.show()
+        self.hide()
 
 
 class SelectionWindow(QWidget):
@@ -49,26 +77,26 @@ class SelectionWindow(QWidget):
         self.user = name
         self.parent = parent
         self.items = items
+        self.items_copy = self.items
         self.std_choose = "(Выбрано)"
+        self.check_items = {}
 
         self.get_button = QPushButton('Забрать', clicked=self.go_end)
         self.take_button = QPushButton('Выбрать всё', clicked=self.select_all)
-        # self.return_button = QPushButton('Вернуть', clicked=self.)
+        self.return_button = QPushButton('Вернуть', clicked=self.go_to_return)
         self.grid_layout = QGridLayout(self)
         self.l = QListWidget()
-        self.check_items = {}
         for i in range(len(self.items)):
             x = self.items[i]
             self.check_items[i] = self.items[i]
-            # if not(self.std_choose in x):
-            #     self.l.addItem(x)
-        self.l.addItems(self.items)
-        # self.l.addItem(self.items[i])
+            if not(self.std_choose in x):
+                self.l.addItem(x)
+        # self.l.addItems(self.items)
         self.grid_layout.addWidget(self.l)
         self.grid_layout.addWidget(self.get_button)
         self.grid_layout.addWidget(self.take_button)
-        # self.grid_layout.addWidget(self.return_button)
-
+        self.grid_layout.addWidget(self.return_button)
+        
         self.l.itemClicked.connect(self.select_one)
 
     def select_one(self, item):
@@ -101,7 +129,6 @@ class SelectionWindow(QWidget):
         self.parent.show()
         self.hide()
         
-        
     def select_all(self):
         self.hide()
         self.l.clear()
@@ -112,8 +139,11 @@ class SelectionWindow(QWidget):
             self.check_items[i] = self.items[i]
         self.l.addItems(self.items)
         self.show()
-        
-        
+    
+    def go_to_return(self):
+        self.s = ReturnWindow(self.items, self.user, self.db, self)
+        self.s.show()        
+        self.hide()
         
 
 class MainWindow(QMainWindow):

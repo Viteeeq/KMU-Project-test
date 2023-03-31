@@ -74,7 +74,7 @@ class PostamatDatabase:
             row = cursor.fetchone() 
             if row:
                 _, _, _, items = row
-                return eval(items)
+                return items
             return "Данного предмета нет в базе данных"
     
     def get_length(self):
