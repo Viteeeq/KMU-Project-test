@@ -15,7 +15,6 @@ class ImageProcessing:
     def faces_comparing(self, start_time):
         len_db = self.db.get_length()
         new_enc = self.get_face_encodings(f"{self.name}.jpg")
-        # self.extract_face(self.name)
         for i in range(1, len_db + 1):
             known_enc, name, items = self.db.get_comparing_biometrics(i)
             try:
@@ -29,7 +28,6 @@ class ImageProcessing:
                 print('Пожалуйста, сделайте новое фото!')
                 return 0, 0
                 break
-        # self.extract_face(self.name)
                      
     def extract_face(self, username): # использовать только для добавления нового пользователя напрямую! можно использовать для инициализации!
         known_photo = face_recognition.load_image_file(f"{username}.jpg") #
