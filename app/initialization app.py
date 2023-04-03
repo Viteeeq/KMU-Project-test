@@ -29,7 +29,7 @@ class VideoPlayer(QDialog):
         self.capture = cv2.VideoCapture(0)
 
         # Создаем кнопку для снимка
-        self.snap_btn = QPushButton("Верификация", self)
+        self.snap_btn = QPushButton("Инициализация", self)
         self.snap_btn.setGeometry(800, 100, 120, 50)
         self.snap_btn.clicked.connect(self.verification)
         # Запускаем таймер
@@ -63,6 +63,7 @@ class VideoPlayer(QDialog):
         
     def verification(self):
         self.ImPr.faces_comparing(self.take_snapshot())
+        self.ImPr.extract_face(self.name)
         
         
 

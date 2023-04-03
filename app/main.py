@@ -9,6 +9,7 @@ from database import PostamatDatabase
 import image
 from alerts import alert
 
+
 class ReturnWindow(QWidget):
     def __init__(self, name, db, parent):
         super(ReturnWindow, self).__init__()

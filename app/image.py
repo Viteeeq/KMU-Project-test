@@ -36,7 +36,7 @@ class ImageProcessing:
         try:
             known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
             smth = json.dumps(known_encodings)
-            self.db.add_user(input(), smth, " 1: чарончик, 2: айфон, 3: карточки, 4: наушники, 5: сок") #здесь можно вручную ввести данные для добавления.
+            self.db.add_user(input(), smth, " 1: СНИЛС, 14: пропуск на работу, 22: Рюкзак, 4: Ключ от авто, 5: Головной убор") #здесь можно вручную ввести данные для добавления.
         except IndexError:
             print("Сфоткайся ещё раз.")
     
@@ -44,8 +44,6 @@ class ImageProcessing:
         try:
             image_to_compare = face_recognition.load_image_file(path)  # загружаем фото которое надо сравнить
             image_to_compare_encoding = face_recognition.face_encodings(image_to_compare)[0]  # вычисляем дескриптор
-            # self.extract_face(self.name)
-            # self.db.change_items('Viktor', ' 1: palka, 2: sila zemli, 3: cheburek, 4: чай, 5: растегай')
             return image_to_compare_encoding
         except IndexError:
             print('Не удалось распознать лицо.', end = ' ')
