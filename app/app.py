@@ -19,7 +19,6 @@ class VideoPlayer(QDialog):
         self.label = QLabel(self)
         self.label.setGeometry(100, 100, 680, 480)
         
-
         # Создаем таймер для получения новых кадров видео
         self.timer = QTimer(self)
         self.timer.setInterval(30)  # 30 миллисекунд между кадрами

@@ -18,31 +18,33 @@ class ReturnWindow(QWidget):
         self.parent = parent
         self.items = self.db.get_items(self.user).split(',')
         self.std_choose = "(Выбрано)"
-        self.std2 = '   '
         self.items_copy = []
+        self.check_items2 = {}
         for i in range(len(self.items)):
             if (self.std_choose in self.items[i]):
                 self.items_copy.append(self.items[i].replace(self.std_choose, '', 1))
 
         self.setWindowTitle(f'Что вы хотите вернуть?')
         self.setFixedSize(640, 480)
+        self.select_all_button = QPushButton('Выбрать всё', clicked = self.select_all)
         self.return_button = QPushButton('Вернуть', clicked = self.return_items)
         self.exit_button = QPushButton('Выход', clicked=self.step_back)
         self.grid_layout2 = QGridLayout(self)
         self.rlist = QListWidget()
-        self.check_items2 = {}
+        
         for i in range(len(self.items_copy)):
             x = self.items_copy[i]
             self.check_items2[i] = self.items_copy[i]
             self.rlist.addItem(x)
+            
         self.grid_layout2.addWidget(self.rlist)
         self.grid_layout2.addWidget(self.return_button)
         self.grid_layout2.addWidget(self.exit_button)
+        self.grid_layout2.addWidget(self.select_all_button)
 
         self.rlist.itemClicked.connect(self.select_one)
         
     def select_one(self, item):
-        # print("Вы кликнули: {}".format(item.text()))
         itm_txt = item.text()
         res = None
         for k, v in self.check_items2.items():
@@ -57,22 +59,26 @@ class ReturnWindow(QWidget):
         for i in range(len(self.items_copy)):
             self.check_items2[i] = self.items_copy[i]
         self.rlist.addItems(self.items_copy)
-        # print(self.check_items2)
-        # print(self.items_copy)
         self.show()
         
+    def select_all(self):
+        for x in range(self.rlist.count()):
+            self.select_one(self.rlist.item(x))
+        
     def return_items(self):
+        str_for_alert = ''
         for i in range(len(self.items)):
             if self.items[i] in self.items_copy:
                 self.items[i] = self.items[i].replace(self.std_choose, '')
-        # print(self.items)
+                str_for_alert += self.items[i] + '\n'
+                
         str1 = ''
         for item in self.items:
             str1 += item + ','
-            # print(item)
         str1 = str1[:-1]
         print(str1, '- return')
         self.db.change_items(self.user, str1)
+        alert(self, str_for_alert, 2)
         self.end_return()
         
     def step_back(self):
@@ -103,10 +109,11 @@ class SelectionWindow(QWidget):
         self.return_button = QPushButton('Вернуть', clicked=self.go_to_return)
         self.grid_layout = QGridLayout(self)
         self.l = QListWidget()
+        
         for i in range(len(self.items)):
             if not(self.std_choose in self.items[i]):
                 self.items_copy.append(self.items[i])
-        # print(self.items_copy)
+                
         for i in range(len(self.items_copy)):
             x = self.items_copy[i]
             self.check_items[i] = x
@@ -119,35 +126,42 @@ class SelectionWindow(QWidget):
         self.l.itemClicked.connect(self.select_one)
 
     def select_one(self, item):
-        # print("Вы кликнули: {}".format(item.text()))
         itm_txt = item.text()
         res = None
+        
         for k, v in self.check_items.items():
             if v == itm_txt:
                 res = int(k)
+                
         self.hide()
         self.l.clear()
+        
         if self.std_choose in self.items_copy[res]:
             self.items_copy[res] = self.items_copy[res].replace(self.std_choose, '')
         else:
             self.items_copy[res] = self.std_choose + self.items_copy[res]
+            
         for i in range(len(self.items_copy)):
             self.check_items[i] = self.items_copy[i]
+            
         self.l.addItems(self.items_copy)
         self.show()
         
     def go_end(self):
         str_for_db = ''
         str_for_alert = ''
+        
         for i in range(len(self.items_copy)):
             if not(self.items_copy[i] in self.items):
                 self.items[self.items.index(self.items_copy[i][len(self.std_choose):])] = self.items_copy[i]
                 str_for_alert += self.items_copy[i][len(self.std_choose):] + '\n'
+                
         for i in range(len(self.items)):
             str_for_db += self.items[i] + ','
+        
         str_for_db = str_for_db[:-1]
         self.db.change_items(self.user, str_for_db)
-        alert(self, str_for_alert)
+        alert(self, str_for_alert, 1)
             
         self.parent.show()
         self.hide()
@@ -172,7 +186,6 @@ class MainWindow(QMainWindow):
         self.button = QPushButton('Верификация', clicked=self.go_to_selection)
 
         self.grid_layout = QGridLayout(centralWidget)
-        ###
         self.db = PostamatDatabase('postamat.db')
         self.db.create_table()
         self.name = "randomname"
