@@ -4,9 +4,10 @@ import cv2
 import time
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QGridLayout, QWidget, QMainWindow, QListWidget
+from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QGridLayout, QWidget, QMainWindow, QListWidget, QMessageBox
 from database import PostamatDatabase
 import image
+from alerts import alert
 
 class ReturnWindow(QWidget):
     def __init__(self, name, db, parent):
@@ -22,7 +23,6 @@ class ReturnWindow(QWidget):
         for i in range(len(self.items)):
             if (self.std_choose in self.items[i]):
                 self.items_copy.append(self.items[i].replace(self.std_choose, '', 1))
-        # print(self.items_copy)
 
         self.setWindowTitle(f'Что вы хотите вернуть?')
         self.setFixedSize(640, 480)
@@ -71,7 +71,7 @@ class ReturnWindow(QWidget):
             str1 += item + ','
             # print(item)
         str1 = str1[:-1]
-        # print(str1)
+        print(str1, '- return')
         self.db.change_items(self.user, str1)
         self.end_return()
         
@@ -119,7 +119,7 @@ class SelectionWindow(QWidget):
         self.l.itemClicked.connect(self.select_one)
 
     def select_one(self, item):
-        print("Вы кликнули: {}".format(item.text()))
+        # print("Вы кликнули: {}".format(item.text()))
         itm_txt = item.text()
         res = None
         for k, v in self.check_items.items():
@@ -137,15 +137,18 @@ class SelectionWindow(QWidget):
         self.show()
         
     def go_end(self):
-        str1 = ''
+        str_for_db = ''
+        str_for_alert = ''
         for i in range(len(self.items_copy)):
             if not(self.items_copy[i] in self.items):
-                self.items[i] = self.items_copy[i]
+                self.items[self.items.index(self.items_copy[i][len(self.std_choose):])] = self.items_copy[i]
+                str_for_alert += self.items_copy[i][len(self.std_choose):] + '\n'
         for i in range(len(self.items)):
-            str1 += self.items[i] + ','
-        str1 = str1[:-1]
-        print(str1)
-        self.db.change_items(self.user, str1)
+            str_for_db += self.items[i] + ','
+        str_for_db = str_for_db[:-1]
+        self.db.change_items(self.user, str_for_db)
+        alert(self, str_for_alert)
+            
         self.parent.show()
         self.hide()
         
@@ -231,8 +234,7 @@ class MainWindow(QMainWindow):
     def verification(self):
         try:
             user_name, user_items = self.ImPr.faces_comparing(self.take_snapshot())
-            print(user_items.split(','))
-            print(type(user_items.split(',')))
+            # print(user_items.split(','))
             user_items_ready = user_items.split(',')
             self.go_to_selection(user_items_ready, user_name)
         except:

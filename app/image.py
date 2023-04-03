@@ -24,6 +24,8 @@ class ImageProcessing:
                     print(f'Это же {name}! Программа определила, что это вы за {spend_time}!')
                     return name, items
                     break
+                elif (i == len_db):
+                    print('Системе не удалось вас узнать, пожалуйста, сделайте новое фото!')
             except TypeError:
                 print('Пожалуйста, сделайте новое фото!')
                 return 0, 0
@@ -34,9 +36,9 @@ class ImageProcessing:
         try:
             known_encodings = np.array(face_recognition.face_encodings(known_photo)[0]).tolist()
             smth = json.dumps(known_encodings)
-            self.db.add_user(input(), smth, " 1: palka, 2: sila zemli, 3: cheburek, 4: чай, 5: растегай") #здесь можно вручную ввести данные для добавления.
+            self.db.add_user(input(), smth, " 1: чарончик, 2: айфон, 3: карточки, 4: наушники, 5: сок") #здесь можно вручную ввести данные для добавления.
         except IndexError:
-            print("Сфоткайся ещё раз, чзх.")
+            print("Сфоткайся ещё раз.")
     
     def get_face_encodings(self, path):
         try:

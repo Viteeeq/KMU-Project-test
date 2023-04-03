@@ -40,16 +40,6 @@ class PostamatDatabase:
                 return {'id': id, 'user_id': user_id, 'biometrics': eval(biometrics),
                         'items': eval(items)}
             return "Данного пользователя нет в базе данных"
-        
-    # def get_biometrics(self, id):
-    #     with sqlite3.connect(self.db_file) as conn:
-    #         cursor = conn.cursor()
-    #         cursor.execute('''SELECT * FROM postamat WHERE id = ?''', (id,))
-    #         row = cursor.fetchone()
-    #         if row:
-    #             _, _, biometrics, _ = row
-    #             return eval(biometrics)
-    #         return "Данного пользователя нет в базе данных"
 
     def change_items(self, user_id, items):
         with sqlite3.connect(self.db_file) as conn:
