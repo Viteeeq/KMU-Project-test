@@ -1,261 +1,173 @@
 import sys
-import sys
 import cv2
-import time
-from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QGridLayout, QWidget, QMainWindow, QListWidget, QMessageBox
-from database import PostamatDatabase
-import image
-from alerts import alert
-
-
-class ReturnWindow(QWidget):
-    def __init__(self, name, db, parent):
-        super(ReturnWindow, self).__init__()
-        
-        self.db = db
-        self.user = name
-        self.parent = parent
-        self.items = self.db.get_items(self.user).split(',')
-        self.std_choose = "(Выбрано)"
-        self.items_copy = []
-        self.check_items2 = {}
-        for i in range(len(self.items)):
-            if (self.std_choose in self.items[i]):
-                self.items_copy.append(self.items[i].replace(self.std_choose, '', 1))
-
-        self.setWindowTitle(f'Что вы хотите вернуть?')
-        self.setFixedSize(640, 480)
-        self.select_all_button = QPushButton('Выбрать всё', clicked = self.select_all)
-        self.return_button = QPushButton('Вернуть', clicked = self.return_items)
-        self.exit_button = QPushButton('Выход', clicked=self.step_back)
-        self.grid_layout2 = QGridLayout(self)
-        self.rlist = QListWidget()
-        
-        for i in range(len(self.items_copy)):
-            x = self.items_copy[i]
-            self.check_items2[i] = self.items_copy[i]
-            self.rlist.addItem(x)
-            
-        self.grid_layout2.addWidget(self.rlist)
-        self.grid_layout2.addWidget(self.return_button)
-        self.grid_layout2.addWidget(self.exit_button)
-        self.grid_layout2.addWidget(self.select_all_button)
-
-        self.rlist.itemClicked.connect(self.select_one)
-        
-    def select_one(self, item):
-        itm_txt = item.text()
-        res = None
-        for k, v in self.check_items2.items():
-            if v == itm_txt:
-                res = int(k)
-        self.hide()
-        self.rlist.clear()
-        if self.std_choose in self.items_copy[res]:
-            self.items_copy[res] = self.items_copy[res].replace(self.std_choose, '')
-        else:
-            self.items_copy[res] = self.std_choose + self.items_copy[res]
-        for i in range(len(self.items_copy)):
-            self.check_items2[i] = self.items_copy[i]
-        self.rlist.addItems(self.items_copy)
-        self.show()
-        
-    def select_all(self):
-        for x in range(self.rlist.count()):
-            self.select_one(self.rlist.item(x))
-        
-    def return_items(self):
-        str_for_alert = ''
-        for i in range(len(self.items)):
-            if self.items[i] in self.items_copy:
-                self.items[i] = self.items[i].replace(self.std_choose, '')
-                str_for_alert += self.items[i] + '\n'
-                
-        str1 = ''
-        for item in self.items:
-            str1 += item + ','
-        str1 = str1[:-1]
-        print(str1, '- return')
-        self.db.change_items(self.user, str1)
-        alert(self, str_for_alert, 2)
-        self.end_return()
-        
-    def step_back(self):
-        self.parent.show()
-        self.hide()
-        
-    def end_return(self):
-        self.parent.parent.show()
-        self.hide()
-
-
-class SelectionWindow(QWidget):
-    def __init__(self, name, db, parent):
-        super(SelectionWindow, self).__init__()
-        
-        self.db = db
-        self.user = name
-        self.parent = parent
-        self.items = self.db.get_items(self.user).split(',')
-        self.std_choose = "(Выбрано)"
-        self.check_items = {}
-        self.items_copy = []
-
-        self.setWindowTitle(f'Предметы {self.user}')
-        self.setFixedSize(640, 480)
-        self.get_button = QPushButton('Забрать', clicked=self.go_end)
-        self.take_button = QPushButton('Выбрать всё', clicked=self.select_all)
-        self.return_button = QPushButton('Вернуть', clicked=self.go_to_return)
-        self.grid_layout = QGridLayout(self)
-        self.l = QListWidget()
-        
-        for i in range(len(self.items)):
-            if not(self.std_choose in self.items[i]):
-                self.items_copy.append(self.items[i])
-                
-        for i in range(len(self.items_copy)):
-            x = self.items_copy[i]
-            self.check_items[i] = x
-            self.l.addItem(x)
-        self.grid_layout.addWidget(self.l)
-        self.grid_layout.addWidget(self.get_button)
-        self.grid_layout.addWidget(self.take_button)
-        self.grid_layout.addWidget(self.return_button)
-        
-        self.l.itemClicked.connect(self.select_one)
-
-    def select_one(self, item):
-        itm_txt = item.text()
-        res = None
-        
-        for k, v in self.check_items.items():
-            if v == itm_txt:
-                res = int(k)
-                
-        self.hide()
-        self.l.clear()
-        
-        if self.std_choose in self.items_copy[res]:
-            self.items_copy[res] = self.items_copy[res].replace(self.std_choose, '')
-        else:
-            self.items_copy[res] = self.std_choose + self.items_copy[res]
-            
-        for i in range(len(self.items_copy)):
-            self.check_items[i] = self.items_copy[i]
-            
-        self.l.addItems(self.items_copy)
-        self.show()
-        
-    def go_end(self):
-        str_for_db = ''
-        str_for_alert = ''
-        
-        for i in range(len(self.items_copy)):
-            if not(self.items_copy[i] in self.items):
-                self.items[self.items.index(self.items_copy[i][len(self.std_choose):])] = self.items_copy[i]
-                str_for_alert += self.items_copy[i][len(self.std_choose):] + '\n'
-                
-        for i in range(len(self.items)):
-            str_for_db += self.items[i] + ','
-        
-        str_for_db = str_for_db[:-1]
-        self.db.change_items(self.user, str_for_db)
-        alert(self, str_for_alert, 1)
-            
-        self.parent.show()
-        self.hide()
-        
-    def select_all(self):
-        for x in range(self.l.count()):
-            self.select_one(self.l.item(x))
-    
-    def go_to_return(self):
-        self.s = ReturnWindow(self.user, self.db, self)
-        self.s.show()
-        self.hide()
-        
+import numpy as np
+from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
+                           QHBoxLayout, QPushButton, QLabel, QLineEdit, 
+                           QMessageBox, QStackedWidget)
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QImage, QPixmap
+from face_processor import FaceProcessor
+import os
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
-        centralWidget = QWidget()
-        self.setCentralWidget(centralWidget)
-
-        self.button = QPushButton('Верификация', clicked=self.go_to_selection)
-
-        self.grid_layout = QGridLayout(centralWidget)
-        self.db = PostamatDatabase('postamat.db')
-        self.db.create_table()
-        self.name = "randomname"
-        self.ImPr = image.ImageProcessing()
-
-        # Создаем QLabel для отображения видео
-        self.label = QLabel(self)
-        self.label.setGeometry(100, 100, 680, 480)
-        self.grid_layout.addWidget(self.label)
-
-        # Создаем таймер для получения новых кадров видео
-        self.timer = QTimer(self)
-        self.timer.setInterval(30)  # 30 миллисекунд между кадрами
+        self.setWindowTitle("Система распознавания лиц")
+        self.setGeometry(100, 100, 800, 600)
+        
+        # Инициализация процессора лиц
+        self.face_processor = FaceProcessor()
+        
+        # Создание центрального виджета
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        
+        # Создание основного layout
+        self.layout = QVBoxLayout(self.central_widget)
+        
+        # Создание стека виджетов
+        self.stacked_widget = QStackedWidget()
+        self.layout.addWidget(self.stacked_widget)
+        
+        # Создание страниц
+        self.main_page = QWidget()
+        self.registration_page = QWidget()
+        self.verification_page = QWidget()
+        
+        # Добавление страниц в стек
+        self.stacked_widget.addWidget(self.main_page)
+        self.stacked_widget.addWidget(self.registration_page)
+        self.stacked_widget.addWidget(self.verification_page)
+        
+        # Настройка страниц
+        self.setup_main_page()
+        self.setup_registration_page()
+        self.setup_verification_page()
+        
+        # Инициализация камеры
+        self.cap = cv2.VideoCapture(0)
+        self.timer = QTimer()
         self.timer.timeout.connect(self.update_frame)
-        self.setWindowTitle('Система доступа к ячейкам хранения')
-
-        # Открываем видеопоток
-        self.capture = cv2.VideoCapture(0)
-
-        # Создаем кнопку для снимка
-        self.snap_btn = QPushButton("Верификация", self)
-        self.snap_btn.setGeometry(800, 100, 120, 50)
-        self.grid_layout.addWidget(self.snap_btn)
-        self.snap_btn.clicked.connect(self.verification)
-        # Запускаем таймер
-        self.timer.start()
-
+        
+    def setup_main_page(self):
+        layout = QVBoxLayout(self.main_page)
+        
+        # Кнопки навигации
+        register_btn = QPushButton("Регистрация")
+        verify_btn = QPushButton("Верификация")
+        
+        register_btn.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.registration_page))
+        verify_btn.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.verification_page))
+        
+        layout.addWidget(register_btn)
+        layout.addWidget(verify_btn)
+        
+    def setup_registration_page(self):
+        layout = QVBoxLayout(self.registration_page)
+        
+        # Виджет для отображения видео
+        self.registration_video = QLabel()
+        self.registration_video.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.registration_video)
+        
+        # Поле ввода ID пользователя
+        self.user_id_input = QLineEdit()
+        self.user_id_input.setPlaceholderText("Введите ID пользователя")
+        layout.addWidget(self.user_id_input)
+        
+        # Кнопки
+        register_btn = QPushButton("Зарегистрировать")
+        back_btn = QPushButton("Назад")
+        
+        register_btn.clicked.connect(self.register_user)
+        back_btn.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.main_page))
+        
+        layout.addWidget(register_btn)
+        layout.addWidget(back_btn)
+        
+    def setup_verification_page(self):
+        layout = QVBoxLayout(self.verification_page)
+        
+        # Виджет для отображения видео
+        self.verification_video = QLabel()
+        self.verification_video.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.verification_video)
+        
+        # Кнопки
+        verify_btn = QPushButton("Проверить")
+        back_btn = QPushButton("Назад")
+        
+        verify_btn.clicked.connect(self.verify_user)
+        back_btn.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.main_page))
+        
+        layout.addWidget(verify_btn)
+        layout.addWidget(back_btn)
+        
     def update_frame(self):
-        # Считываем кадр из видеопотока
-        ret, frame = self.capture.read()
-
-        # Преобразуем кадр в QImage
+        ret, frame = self.cap.read()
         if ret:
-            rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            h, w, ch = rgb_image.shape
+            # Конвертируем кадр в RGB
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            
+            # Обнаруживаем лицо
+            face_result = self.face_processor.detect_face(frame)
+            if face_result:
+                face, (x, y, w, h) = face_result
+                # Рисуем прямоугольник вокруг лица
+                cv2.rectangle(rgb_frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+            
+            # Конвертируем в QImage и отображаем
+            h, w, ch = rgb_frame.shape
             bytes_per_line = ch * w
-            qt_image = QImage(rgb_image.data, w, h,
-                              bytes_per_line, QImage.Format_RGB888)
-
-            # Отображаем QImage в QLabel
-            pixmap = QPixmap.fromImage(qt_image)
-            self.label.setPixmap(pixmap)
-
-    def go_to_selection(self, items, username):
-        self.g = SelectionWindow(username, self.db, self)
-        self.g.show()        
-        self.hide()
-        
-    def take_snapshot(self):
-        # Считываем текущий кадр из видеопотока
-        start_time = time.time()
-        ret, frame = self.capture.read()
-
-        # Сохраняем кадр в файл
+            qt_image = QImage(rgb_frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
+            
+            # Отображаем на соответствующей странице
+            current_page = self.stacked_widget.currentWidget()
+            if current_page == self.registration_page:
+                self.registration_video.setPixmap(QPixmap.fromImage(qt_image))
+            elif current_page == self.verification_page:
+                self.verification_video.setPixmap(QPixmap.fromImage(qt_image))
+                
+    def register_user(self):
+        user_id = self.user_id_input.text()
+        if not user_id:
+            QMessageBox.warning(self, "Ошибка", "Введите ID пользователя")
+            return
+            
+        ret, frame = self.cap.read()
         if ret:
-            cv2.imwrite(f'{self.name}.jpg', frame)
-            return start_time
+            face_result = self.face_processor.detect_face(frame)
+            if face_result:
+                face, _ = face_result
+                self.face_processor.add_face(face, user_id)
+                QMessageBox.information(self, "Успех", "Пользователь успешно зарегистрирован")
+            else:
+                QMessageBox.warning(self, "Ошибка", "Лицо не обнаружено")
+                
+    def verify_user(self):
+        ret, frame = self.cap.read()
+        if ret:
+            face_result = self.face_processor.detect_face(frame)
+            if face_result:
+                face, _ = face_result
+                user_id = self.face_processor.recognize_face(face)
+                if user_id:
+                    QMessageBox.information(self, "Успех", f"Пользователь распознан: {user_id}")
+                else:
+                    QMessageBox.warning(self, "Ошибка", "Пользователь не распознан")
+            else:
+                QMessageBox.warning(self, "Ошибка", "Лицо не обнаружено")
+                
+    def showEvent(self, event):
+        self.timer.start(30)  # Обновление каждые 30 мс
         
-    def verification(self):
-        try:
-            user_name, user_items = self.ImPr.faces_comparing(self.take_snapshot())
-            # print(user_items.split(','))
-            user_items_ready = user_items.split(',')
-            self.go_to_selection(user_items_ready, user_name)
-        except:
-            pass
+    def closeEvent(self, event):
+        self.timer.stop()
+        self.cap.release()
+        event.accept()
 
-if __name__=="__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
-    w = MainWindow()
-    w.show()
-    app.exec_()
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
