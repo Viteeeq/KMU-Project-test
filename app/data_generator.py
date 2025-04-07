@@ -57,6 +57,24 @@ class DataGenerator:
         
         return img
 
+    def generate_face(self) -> np.ndarray:
+        """
+        Генерирует одно лицо с вариациями
+        """
+        face = self.generate_face_image()
+        face = self.add_variations(face)
+        # Нормализуем значения
+        face = face.astype(np.float32) / 255.0
+        # Преобразуем в 2D массив
+        face = face.reshape(100, 100)
+        return face
+
+    def generate_faces(self, num_faces: int) -> List[np.ndarray]:
+        """
+        Генерирует список лиц
+        """
+        return [self.generate_face() for _ in range(num_faces)]
+
     def generate_dataset(self, 
                         num_users: int,
                         variations_per_user: int = 5) -> List[str]:
