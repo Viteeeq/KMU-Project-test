@@ -1,6 +1,7 @@
 import numpy as np
 from typing import List, Tuple, Optional
 import pickle
+from concurrent.futures import ThreadPoolExecutor
 
 class KDNode:
     def __init__(self, face_data: np.ndarray, user_id: str, 
@@ -12,39 +13,47 @@ class KDNode:
         self.left = left
         self.right = right
         self.axis = axis
+        # Добавляем кэш для ускорения поиска
+        self.median_value = float(np.median(face_data, axis=0)[axis])
+        self.norm = np.linalg.norm(face_data)
 
 class KDTree:
     def __init__(self):
         self.root: Optional[KDNode] = None
         self.size = 0
+        self.dimension = 0
         
     def _build_tree(self, faces: List[Tuple[np.ndarray, str]], 
                    start: int, end: int, axis: int) -> Optional[KDNode]:
-        """Рекурсивно строит k-d дерево"""
+        """Рекурсивно строит k-d дерево с улучшенной балансировкой"""
         if start >= end:
             return None
             
-        # Находим медиану по текущей оси
         faces_slice = faces[start:end]
-        # Используем среднее значение по оси для сортировки
+        
+        # Выбираем ось с наибольшей дисперсией для лучшей балансировки
+        if len(faces_slice) > 1:
+            variances = np.var([x[0] for x in faces_slice], axis=0)
+            axis = np.argmax(variances)
+        
+        # Сортируем по медиане выбранной оси
         faces_sorted = sorted(faces_slice, 
-                            key=lambda x: float(np.mean(x[0][:, axis])))
+                            key=lambda x: np.median(x[0], axis=0)[axis])
         median_idx = len(faces_sorted) // 2
         
-        # Создаем узел
+        # Создаем узел с предвычисленными значениями
         node = KDNode(faces_sorted[median_idx][0], 
                      faces_sorted[median_idx][1],
                      axis=axis)
         
-        # Обновляем список лиц с отсортированными данными
         faces[start:end] = faces_sorted
-        
-        # Рекурсивно строим левое и правое поддерево
         mid = start + median_idx
+        
+        # Рекурсивно строим поддеревья
         node.left = self._build_tree(faces, start, mid, 
-                                   (axis + 1) % faces[0][0].shape[1])
+                                   (axis + 1) % self.dimension)
         node.right = self._build_tree(faces, mid + 1, end,
-                                    (axis + 1) % faces[0][0].shape[1])
+                                    (axis + 1) % self.dimension)
         
         return node
         
@@ -53,6 +62,7 @@ class KDTree:
         if not faces:
             return
             
+        self.dimension = faces[0][0].shape[1]
         self.root = self._build_tree(faces, 0, len(faces), 0)
         self.size = len(faces)
         
@@ -60,23 +70,23 @@ class KDTree:
                      target: np.ndarray,
                      best_dist: float = float('inf'),
                      best_node: Optional[KDNode] = None) -> Tuple[float, Optional[KDNode]]:
-        """Рекурсивно находит ближайшее лицо"""
+        """Рекурсивно находит ближайшее лицо с оптимизированным поиском"""
         if node is None:
             return best_dist, best_node
             
-        # Вычисляем расстояние до текущего узла
-        current_dist = float(np.mean(np.abs(node.face_data - target)))
+        # Используем косинусное расстояние для лучшей точности
+        target_norm = np.linalg.norm(target)
+        current_dist = 1 - np.dot(node.face_data.flatten(), target.flatten()) / \
+                      (node.norm * target_norm)
         
-        # Обновляем лучшее расстояние
         if current_dist < best_dist:
             best_dist = current_dist
             best_node = node
             
-        # Определяем, в каком поддереве искать
-        target_val = float(np.mean(target[:, node.axis]))
-        node_val = float(np.mean(node.face_data[:, node.axis]))
+        # Используем предвычисленное медианное значение
+        target_val = np.median(target, axis=0)[node.axis]
         
-        if target_val < node_val:
+        if target_val < node.median_value:
             first, second = node.left, node.right
         else:
             first, second = node.right, node.left
@@ -85,9 +95,9 @@ class KDTree:
         best_dist, best_node = self._find_nearest(first, target, 
                                                 best_dist, best_node)
         
-        # Проверяем, нужно ли искать во втором поддереве
-        axis_dist = abs(target_val - node_val)
-        if axis_dist < best_dist:
+        # Улучшенная проверка необходимости поиска во втором поддереве
+        axis_dist = abs(target_val - node.median_value)
+        if axis_dist < best_dist * 1.5:  # Увеличенный порог для более точного поиска
             best_dist, best_node = self._find_nearest(second, target,
                                                     best_dist, best_node)
         
@@ -102,7 +112,10 @@ class KDTree:
         if best_node is None:
             return None, float('inf')
             
-        return best_node.user_id, float(np.mean(np.abs(best_node.face_data - target)))
+        # Вычисляем финальное расстояние
+        final_dist = 1 - np.dot(best_node.face_data.flatten(), target.flatten()) / \
+                    (best_node.norm * np.linalg.norm(target))
+        return best_node.user_id, final_dist
         
     def save(self, filepath: str) -> None:
         """Сохраняет k-d дерево в файл"""
@@ -117,10 +130,12 @@ class KDTree:
         try:
             with open(filepath, 'rb') as f:
                 self.root = pickle.load(f)
-                # Подсчитываем размер дерева
+                # Подсчитываем размер дерева и определяем размерность
                 def count_nodes(node: Optional[KDNode]) -> int:
                     if node is None:
                         return 0
+                    if self.dimension == 0:
+                        self.dimension = node.face_data.shape[1]
                     return 1 + count_nodes(node.left) + count_nodes(node.right)
                 self.size = count_nodes(self.root)
         except FileNotFoundError:
